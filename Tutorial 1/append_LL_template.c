@@ -101,7 +101,15 @@ int main()
 
 void appendLL(LinkedList *ll_a , LinkedList *ll_b)
 {
-    /*add your code here */
+    ListNode *traversal_node = ll_a->head;
+    ListNode *b_head_node = ll_b->head;
+
+    while (traversal_node->next != NULL) {
+        traversal_node = traversal_node->next;
+    }
+
+    traversal_node->next = b_head_node;
+    ll_b->head = NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
