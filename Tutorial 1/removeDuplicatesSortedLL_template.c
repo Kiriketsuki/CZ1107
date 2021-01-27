@@ -79,9 +79,21 @@ int main()
 
 void removeDuplicatesSortedLL(LinkedList *ll)
 {
-	/* add your code here */
+	ListNode *current = ll->head;
+    int index = 0;
+
+    while (current->next != NULL) {
+        if (current->item == current->next->item) {
+            current = current->next;
+            removeNode(ll, index);
+        } else {
+            index++;
+            current = current->next;
+        }
+    }
 }
 ///////////////////////////////////////////////////////////////////////////////////
+
 
 void printList(LinkedList *ll){
 
