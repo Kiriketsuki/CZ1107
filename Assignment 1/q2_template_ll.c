@@ -103,24 +103,13 @@ int main()
 
 void alternateMergeLinkedList(LinkedList *ll1, LinkedList *ll2)
 {
-    ListNode *travesal_node = ll1->head;
-    ListNode *travesal_node_2 = ll2->head;
-    int size_1 = ll1->size;
-    int size_2 = ll2->size;
+    int small = (ll1->size > ll2->size ? ll2->size : ll1->size);
     int index = 1;
 
-    if (size_1 >= size_2) {
-        for (int i = 0; i < size_1; i++) {
-            insertNode(ll1, index, ll2->head->item);
-            removeNode(ll2, 0);
-            index += 2;
-        }
-    } else {
-        for (int i = 0; i < size_2; i++) {
-            insertNode(ll1, index, ll2->head->item);
-            removeNode(ll2,0);
-            index += 2;
-        }
+    for (int i = 0; i < small; i++) {
+        insertNode(ll1, index, ll2->head->item);
+        removeNode(ll2, 0);
+        index += 2;
     }
 
 }
