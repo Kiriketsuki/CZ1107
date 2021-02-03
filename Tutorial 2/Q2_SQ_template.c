@@ -107,21 +107,47 @@ int main()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void reverseFirstKItems(Queue *q, int k)
+void reverseFirstKItems_cheat(Queue *q, int k)
 {
     ListNode *current_node = (q->ll).head;
+    Queue queueueue;
+    queueueue.ll.head = NULL;
+    queueueue.ll.size = 0;
+
     Stack stackackackack;
     stackackackack.ll.head = NULL;
     stackackackack.ll.size = 0;
 
-    while (current_node != NULL) {
+    for(int i = 0; i < k; i++) {
         push(&stackackackack, current_node->item);
         current_node = current_node->next;
         dequeue(q);
     }
 
     while (!isEmptyStack(&stackackackack)) {
-        enqueue(q, pop(&stackackackack));
+        enqueue(&queueueue, pop(&stackackackack));
+    }
+
+    while (!isEmptyQueue(q)) {
+        enqueue(&queueueue, dequeue(q));
+    }
+
+    while(!isEmptyQueue(&queueueue)) {
+        enqueue(q, dequeue(&queueueue));
+    }
+}
+
+void reverseFirstKItems(Queue *q, int k) {
+    Stack stackackack;
+    stackackack.ll.head = NULL;
+    stackackack.ll.size = 0;
+
+    for (int i = 0; i < k; i++) {
+        push(&stackackack, dequeue(q));
+    }
+
+    for (int i = 0; i < k; i++) {
+        enqueue(q, pop(&stackackack));
     }
 }
 
