@@ -100,9 +100,81 @@ int main()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void sortStack(Stack *s)
+void sortStack_temp(Stack *s)
 {
-    /* add your code here */
+    Stack stackackack;
+    stackackack.ll.head = NULL;
+    stackackack.ll.size = 0;
+    int cur;
+    int temp;
+
+    while(!isEmptyStack(s)) {
+        cur = pop(s);
+        if (stackackack.ll.head == NULL) {
+            push(&stackackack, cur);
+        } else if (cur > stackackack.ll.head->item) {
+            temp = pop(&stackackack);
+            push(&stackackack, cur);
+            push(&stackackack, temp);
+        } else {
+            push(&stackackack, cur);
+        }
+    }
+
+    s->ll.head = stackackack.ll.head;
+    s->ll.size = stackackack.ll.size;
+    stackackack.ll.head = NULL;
+    stackackack.ll.size = 0;
+
+}
+
+void sortStack(Stack *s) {
+    Stack stackackack;
+    int cur;
+    stackackack.ll.head = NULL;
+    stackackack.ll.size = 0;
+
+    push(&stackackack, pop(s));
+    while (!isEmptyStack(s)) {
+        cur = pop(s);
+
+        if (isEmptyStack(&stackackack) || cur > peek(&stackackack)) {
+            push(&stackackack, cur);
+        } else {
+            while(!isEmptyStack(&stackackack) && cur < peek(&stackackack)) {
+                push(s, pop(&stackackack));
+            }
+            push(&stackackack, cur);
+        }
+    }
+
+    while(!isEmptyStack(&stackackack)) {
+        push(s, pop(&stackackack));
+    }
+}
+
+void sortStack_ly(Stack *s) {
+    Stack s2;
+    s2.ll.head = NULL;
+    s2.ll.size = 0;
+
+    int stack_item, temp;
+    int i = 0;
+
+    while(!isEmptyStack(s)) {
+        stack_item = pop(s);
+
+        while (!isEmptyStack(&s2) && peek(&s2) > stack_item) {
+            temp = pop(&s2);
+            push(s, temp);
+        }
+        push(&s2, stack_item);
+    }
+
+    while (!isEmptyStack(&s2)) {
+        stack_item = pop(&s2);
+        push(s, stack_item);
+    }
 }
 
 
