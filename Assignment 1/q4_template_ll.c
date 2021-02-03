@@ -110,18 +110,11 @@ int main()
 
 void frontBackSplitLinkedList(LinkedList *ll, LinkedList *resultFrontList, LinkedList *resultBackList)
 {
-    int ll_size = ll->size;
+    int looper = (ll->size%2 == 0 ? ll->size/2 : ll->size/2 +1 );
 
-    if (ll_size%2 == 0) {
-        for (int i = 0; i < ll_size/2; i++) {
-            insertNode(resultFrontList, i, ll->head->item);
-            removeNode(ll, 0);
-        }
-    } else {
-        for (int i = 0; i < ll_size/2 + 1; i++) {
-            insertNode(resultFrontList, i ,ll->head->item);
-            removeNode(ll, 0);
-        }
+    for (int i = 0; i < looper; i++) {
+        insertNode(resultFrontList, i, ll->head->item);
+        removeNode(ll, 0);
     }
 
     resultBackList->head = ll->head;
