@@ -105,7 +105,7 @@ int main()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void reverseStack(Stack *s)
+void reverseStack_inefficient(Stack *s)
 {
 
     ListNode *current_node = (s->ll).head;
@@ -121,6 +121,20 @@ void reverseStack(Stack *s)
 
     while (!isEmptyQueue(&queueueueue)) {
         push(s, dequeue(&queueueueue));
+    }
+}
+
+void reverseStack(Stack *s) {
+    Queue queueue;
+    queueue.ll.head = NULL;
+    queueue.ll.size = 0;
+
+    while (!isEmptyStack(s)) {
+        enqueue(&queueue, pop(s));
+    }
+
+    while(!isEmptyQueue(&queueue)) {
+        push(s, dequeue(&queueue));
     }
 }
 
