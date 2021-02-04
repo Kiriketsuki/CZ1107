@@ -142,12 +142,20 @@ void reverseFirstKItems(Queue *q, int k) {
     stackackack.ll.head = NULL;
     stackackack.ll.size = 0;
 
+    if(k <= 0 || isEmptyQueue(q) || k > q->ll.size) {
+        return;
+    }
+
     for (int i = 0; i < k; i++) {
         push(&stackackack, dequeue(q));
     }
 
     for (int i = 0; i < k; i++) {
         enqueue(q, pop(&stackackack));
+    }
+
+    for (int i = 0; i < q->ll.size - k; i++) {
+        enqueue(q, dequeue(q));
     }
 }
 

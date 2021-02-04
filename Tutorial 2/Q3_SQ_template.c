@@ -128,7 +128,7 @@ void sortStack_temp(Stack *s)
 
 }
 
-void sortStack(Stack *s) {
+void sortStack_jov(Stack *s) {
     Stack stackackack;
     int cur;
     stackackack.ll.head = NULL;
@@ -175,6 +175,28 @@ void sortStack_ly(Stack *s) {
         stack_item = pop(&s2);
         push(s, stack_item);
     }
+}
+
+void sortStack(Stack *s) {
+    Stack stackackack;
+    int temp;
+    stackackack.ll.head = NULL;
+    stackackack.ll.size = 0;
+
+    while (!isEmptyStack(s)) {
+        temp = pop(s);
+
+        while(!isEmptyStack(&stackackack) && peek(&stackackack) < temp) {
+            push(s, pop(&stackackack));
+        }
+
+        push(&stackackack, temp);
+    }
+
+    s->ll.head = stackackack.ll.head;
+    s->ll.size = stackackack.ll.size;
+    stackackack.ll.head = NULL;
+    stackackack.ll.size = 0;
 }
 
 
