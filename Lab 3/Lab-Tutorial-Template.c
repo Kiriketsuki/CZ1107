@@ -100,7 +100,7 @@ int main(int argc, const char * argv[]){
 
 	printf("The tree for question 4 visited by in-order is \n");
 	printTree_InOrder(root2);
-	printf("\nthe values stored in all nodes of the tree that have at least one great-grandchild are: \n");
+	printf("\nThe values of the nodes in the tree that have at least one great-grandchild are: \n");
 
 	hasGreatGrandchild(root2);
 
@@ -130,9 +130,8 @@ void mirrorTree(BTNode *node){
 int hasGreatGrandchild(BTNode *node){
     int curr_depth = maxDepth(node);
 
-    if (curr_depth >= 1) {
-        printTree_InOrder(node);
-        printf("\n");
+    if (curr_depth >= 3) {
+        printf("%d ", node->item);
     }
 
     if (node->left != NULL) {
