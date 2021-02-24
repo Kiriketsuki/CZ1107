@@ -97,6 +97,10 @@ int main()
 int sumOfOddNodes(BTNode *node) {
     int to_return = 0;
 
+    if (node == NULL) {
+        return to_return;
+    }
+
     if (node->item % 2 == 1) {
         to_return += node->item;
     }

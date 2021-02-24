@@ -111,30 +111,27 @@ int main()
 int identical(BTNode *tree1, BTNode *tree2) {
     int to_return = 0;
 
-   if (tree1 == NULL && tree2 == NULL) {
-       return 1;
-   }
+    if (tree1 == NULL && tree2 == NULL) {
+        return 1;
+    }
 
-   if (tree1->item == tree2->item) {
-       if (tree1->left == NULL && tree1->right == NULL && tree2->left == NULL && tree2->right == NULL) {
-           to_return = 1;
-       }
+    if (tree1->item == tree2->item) {
+        if (tree1->left == NULL && tree1->right == NULL && tree2->left == NULL && tree2->right == NULL) {
+            to_return = 1;
+        }
 
-       if (tree1->left != NULL && tree2->left != NULL) {
-           if (to_return == 1) {
-                to_return = identical(tree1->left, tree2->left);
-           }
-       }
+        if (tree1->left != NULL && tree2->left != NULL) {
+            to_return = identical(tree1->left, tree2->left);
+        }
 
-       if (tree1->right != NULL && tree2->right != NULL) {
-           if (to_return == 1) {
-               to_return = identical(tree1->right, tree2->right);
-           }
-       }
-   }
+        if (tree1->right != NULL && tree2->right != NULL) {
+            if (to_return == 1) {
+                to_return = identical(tree1->right, tree2->right);
+            }
+        }
+    }
 
-
-   return to_return;
+    return to_return;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
