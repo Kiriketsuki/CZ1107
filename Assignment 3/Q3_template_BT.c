@@ -100,9 +100,9 @@ int countOneChildNodes(BTNode *node) {
         return to_return;
     }
 
-    if (node->left == NULL && node->right == NULL) {
-        return to_return;
-    }
+    // if (node->left == NULL && node->right == NULL) {
+    //     return to_return;
+    // }
 
     if (node->left != NULL) {
         if (node->right == NULL) {
@@ -122,6 +122,25 @@ int countOneChildNodes(BTNode *node) {
 
     return to_return;
 }
+
+// int countOneChildNodes(BTNode *node)
+
+// {
+//     int l=0, r=0, num=0;
+
+//     if (node == NULL) {
+//         return 0;
+//     }
+
+//     if (((node->left != NULL) && (node->right == NULL)) || ((node->left == NULL) && (node->right != NULL))){
+//         num += 1;
+//     } 
+
+//     l += countOneChildNodes(node->left);
+//     r += countOneChildNodes(node->right);
+
+//     return (l+r+num);
+// }
 
 ///////////////////////////////////////////////////////////////////////////////////
 
