@@ -90,6 +90,10 @@ void postOrderIterativeS2(BSTNode *root)
     stackack.top = NULL;
     stackackack.top = NULL;
 
+    if (root == NULL) {
+        return;
+    }
+
     push(&stackack, root);
 
     while (!isEmpty(&stackack)) {

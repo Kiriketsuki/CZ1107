@@ -91,8 +91,12 @@ void postOrderIterativeS1(BSTNode *root)
     s.top = NULL;
     curr = root;
 
+    if (root == NULL) {
+        return;
+    }
+
     while (curr != NULL || !isEmpty(&s)) {
-        while(curr != NULL) {
+        while (curr != NULL) {
             if (curr->right != NULL) {
                 push(&s, curr->right);
             }

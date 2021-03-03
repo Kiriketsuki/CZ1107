@@ -90,6 +90,10 @@ void inOrderTraversal(BSTNode *root)
     curr = root;
     s.top = NULL;
 
+    if (root == NULL) {
+        return;
+    }
+
     while (curr != NULL || !isEmpty(&s)) {
         while (curr != NULL){
             push(&s, curr);
