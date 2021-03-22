@@ -88,77 +88,189 @@ int precedence_checker(char operator) {
     }
 }
 
+// void in2PreLL(char* infix, LinkedList *inExpLL)
+// {
+//     Stack stackackack;
+//     stackackack.head = NULL;
+//     stackackack.size = 0;
+
+//     char *in_ptr = infix;
+//     char scanned;
+//     int scanned_int;
+//     int str_len = 0;
+//     int to_insert = 0;
+//     int multiplier = 1;
+//     int prev_scan = 1; //0 for alnum, 1 for operator
+
+//     for (in_ptr; *in_ptr != '\0'; in_ptr++) {
+//         str_len++;
+//     }
+//     in_ptr--;
+
+//     do {
+//         scanned = *in_ptr;
+
+//         if (scanned <= 57 && scanned >= 48) { // is numeric
+//             scanned = scanned - '0';
+//             scanned_int = (int)scanned;
+//             scanned_int *= multiplier;
+//             printf("scanned_int is %d and multiplier is %d\n", scanned_int, multiplier);
+//             to_insert += scanned_int;
+//             printf("to_insert is %d\n", to_insert);
+//             multiplier *= 10;
+//             prev_scan = 0;
+
+//         } else {
+//             printf("to_insert is %d\n", to_insert);
+//             if (!prev_scan) { // if the previous scan was alnum
+//                 insertNode(inExpLL, to_insert, OPERAND);
+//             }
+            
+//             if (scanned == '(') {
+//                 while (peek(stackackack) != ')') {
+//                     insertNode(inExpLL, peek(stackackack), OPT);
+//                     pop(&stackackack);
+//                 }
+//                 pop(&stackackack);
+//             } else if (scanned == ')') {
+//                 push(&stackackack, scanned);
+//             } else {
+//                 while (!isEmptyStack(stackackack) && peek(stackackack) != ')' && precedence_checker(peek(stackackack)) > precedence_checker(scanned)) {
+//                     insertNode(inExpLL, peek(stackackack), OPT);
+//                     pop(&stackackack);
+//                 }
+//                 push(&stackackack, scanned);
+//             }
+//             to_insert = 0;
+//             multiplier = 1;
+//             prev_scan = 1;
+//         }
+//         in_ptr--;
+//         str_len--;
+
+//     } while (str_len != 0);
+
+//     if (!prev_scan) { // if the previous scan was alnum
+//         insertNode(inExpLL, to_insert, OPERAND);
+//         to_insert = 0;
+//         multiplier = 1;
+//     }
+
+//     while (!isEmptyStack(stackackack)) {
+//         insertNode(inExpLL, peek(stackackack), OPT);
+//         pop(&stackackack);
+//     }
+// }
+
+int precedence(char c)
+{
+    if (c == '*' || c == '/')
+    {
+        return 2;
+    }
+
+    if (c == '+' || c == '-')
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+
 void in2PreLL(char* infix, LinkedList *inExpLL)
 {
-    Stack stackackack;
-    stackackack.head = NULL;
-    stackackack.size = 0;
+    
+    int i = 0;
+    int num = 0;
+    int prev = 0;
+    int index=0;
+    char c = infix[i];
+    char input[SIZE];
 
-    char *in_ptr = infix;
-    char scanned;
-    int scanned_int;
-    int str_len = 0;
-    int to_insert = 0;
-    int multiplier = 1;
-    int prev_scan = 1; //0 for alnum, 1 for operator
 
-    for (in_ptr; *in_ptr != '\0'; in_ptr++) {
-        str_len++;
+    // TO DO: change to int array not char array
+    while (c != '\0')
+    {
+        printf("c is %c\n", c);
+        if (c >= 48 && c <= 57) {
+            num = num * 10;
+            num = num + (c -'0');
+            prev = 1;
+            i++;
+            c = infix[i];
+        } else {
+            if (prev) {
+                input[index] = num;
+                index++;
+                num = 0;
+            }
+
+            input[index] = c;
+            index++;
+            prev = 0;
+            i++;
+            c = infix[i];
+        }
+        // printf("input index is %c\n", input[index-1]);
     }
-    in_ptr--;
 
-    do {
-        scanned = *in_ptr;
+    if (prev) {
+        input[index] = num;
+    } else {
+        index--;
+    }
 
-        if (scanned <= 57 && scanned >= 48) { // is numeric
-            scanned = scanned - '0';
-            scanned_int = (int)scanned;
-            scanned_int *= multiplier;
-            // printf("scanned_int is %d and multiplier is %d\n", scanned_int, multiplier);
-            to_insert += scanned_int;
-            // printf("to_insert is %d\n", to_insert);
-            multiplier *= 10;
-            prev_scan = 0;
+    printf("index is %d\n", index);
+
+    // index++;
+    // input[index] = '\0';
+
+    // printf("converted string is %s\n", input);
+    // index--;
+    // printf("last char is %c\n", input[index]);
+
+    Stack s;
+    s.head = NULL;
+    s.size = 0;
+    // index--;
+
+    while (index != -1) {
+        c = input[index];
+        // printf("c is %c\n", c);
+
+        if (precedence(c) != 0) {
+            printf("c is %c\n", c);
+            while (!(isEmptyStack(s)) && precedence(peek(s)) > precedence(c)) {
+                // printf("popped\n");
+                insertNode(inExpLL, peek(s), OPT);
+                pop(&s);
+            }
+            push(&s, c);
+            // printf("top of stack is %c\n", peek(s));
+
+        } else if (c == '(') {
+            while (peek(s)!= ')') {
+                insertNode(inExpLL, peek(s), OPT);
+                pop(&s);
+            }
+            pop(&s); 
+
+        } else if (c == ')') {
+            // printf("c is actually )\n");
+            push(&s, c);
 
         } else {
-            // printf("to_insert is %d\n", to_insert);
-            if (!prev_scan) { // if the previous scan was alnum
-                insertNode(inExpLL, to_insert, OPERAND);
-            }
-            
-            if (scanned == '(') {
-                while (peek(stackackack) != ')') {
-                    insertNode(inExpLL, peek(stackackack), OPT);
-                    pop(&stackackack);
-                }
-                pop(&stackackack);
-            } else if (scanned == ')') {
-                push(&stackackack, scanned);
-            } else {
-                while (!isEmptyStack(stackackack) && peek(stackackack) != ')' && precedence_checker(peek(stackackack)) > precedence_checker(scanned)) {
-                    insertNode(inExpLL, peek(stackackack), OPT);
-                    pop(&stackackack);
-                }
-                push(&stackackack, scanned);
-            }
-            to_insert = 0;
-            multiplier = 1;
-            prev_scan = 1;
+            // printf("c is %d\n", c);
+            insertNode(inExpLL, c, OPERAND);
         }
-        in_ptr--;
-        str_len--;
 
-    } while (str_len != 0);
-
-    if (!prev_scan) { // if the previous scan was alnum
-        insertNode(inExpLL, to_insert, OPERAND);
-        to_insert = 0;
-        multiplier = 1;
+        index--;
     }
 
-    while (!isEmptyStack(stackackack)) {
-        insertNode(inExpLL, peek(stackackack), OPT);
-        pop(&stackackack);
+    while (!isEmptyStack(s)) {
+        insertNode(inExpLL, peek(s), OPT);
+        pop(&s);
     }
 }
 
