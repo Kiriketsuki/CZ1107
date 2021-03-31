@@ -1,0 +1,276 @@
+============= Hash Table ============
+|1. Insert a key to the hash table  |
+|2. Delete a key from the hash table|
+|3. Print the hash table            |
+|4. Quit                            |
+=====================================
+Insert: 1 Key Comparisons: 0
+Insert: 2 Key Comparisons: 0
+Insert: 3 Key Comparisons: 0
+Insert: 4 Key Comparisons: 0
+Insert: 5 Key Comparisons: 0
+Insert: 6 Key Comparisons: 0
+Insert: 7 Key Comparisons: 0
+Insert: 8 Key Comparisons: 0
+Insert: 9 Key Comparisons: 0
+Insert: 10 Key Comparisons: 0
+Insert: 11 Key Comparisons: 0
+Insert: 12 Key Comparisons: 0
+Insert: 13 Key Comparisons: 0
+Insert: 14 Key Comparisons: 0
+Insert: 15 Key Comparisons: 0
+Insert: 16 Key Comparisons: 0
+Insert: 17 Key Comparisons: 0
+Insert: 18 Key Comparisons: 0
+Insert: 19 Key Comparisons: 0
+Insert: 20 Key Comparisons: 0
+Insert: 21 Key Comparisons: 0
+Insert: 22 Key Comparisons: 0
+Insert: 23 Key Comparisons: 0
+Insert: 24 Key Comparisons: 0
+Insert: 25 Key Comparisons: 0
+Insert: 26 Key Comparisons: 0
+Insert: 27 Key Comparisons: 0
+Insert: 28 Key Comparisons: 0
+Insert: 29 Key Comparisons: 0
+Insert: 30 Key Comparisons: 0
+Insert: 31 Key Comparisons: 0
+Insert: 32 Key Comparisons: 0
+Insert: 33 Key Comparisons: 0
+Insert: 34 Key Comparisons: 0
+Insert: 35 Key Comparisons: 0
+Insert: 36 Key Comparisons: 0
+Insert: 37 Key Comparisons: 0
+Key Comparisons: 37. Unable to insert 42. Table is full.
+Duplicate key: 37
+Duplicate key: 36
+Duplicate key: 3
+0: 37  
+1: 1  
+2: 2  
+3: 3  
+4: 4  
+5: 5  
+6: 6  
+7: 7  
+8: 8  
+9: 9  
+10: 10  
+11: 11  
+12: 12  
+13: 13  
+14: 14  
+15: 15  
+16: 16  
+17: 17  
+18: 18  
+19: 19  
+20: 20  
+21: 21  
+22: 22  
+23: 23  
+24: 24  
+25: 25  
+26: 26  
+27: 27  
+28: 28  
+29: 29  
+30: 30  
+31: 31  
+32: 32  
+33: 33  
+34: 34  
+35: 35  
+36: 36  
+Delete: 6 Key Comparisons: 1
+6 does not exist.
+0: 37  
+1: 1  
+2: 2  
+3: 3  
+4: 4  
+5: 5  
+6: 6 *
+7: 7  
+8: 8  
+9: 9  
+10: 10  
+11: 11  
+12: 12  
+13: 13  
+14: 14  
+15: 15  
+16: 16  
+17: 17  
+18: 18  
+19: 19  
+20: 20  
+21: 21  
+22: 22  
+23: 23  
+24: 24  
+25: 25  
+26: 26  
+27: 27  
+28: 28  
+29: 29  
+30: 30  
+31: 31  
+32: 32  
+33: 33  
+34: 34  
+35: 35  
+36: 36  
+Insert: 38 Key Comparisons: 36
+Delete: 36 Key Comparisons: 1
+Insert: 6 Key Comparisons: 36
+0: 37  
+1: 1  
+2: 2  
+3: 3  
+4: 4  
+5: 5  
+6: 38  
+7: 7  
+8: 8  
+9: 9  
+10: 10  
+11: 11  
+12: 12  
+13: 13  
+14: 14  
+15: 15  
+16: 16  
+17: 17  
+18: 18  
+19: 19  
+20: 20  
+21: 21  
+22: 22  
+23: 23  
+24: 24  
+25: 25  
+26: 26  
+27: 27  
+28: 28  
+29: 29  
+30: 30  
+31: 31  
+32: 32  
+33: 33  
+34: 34  
+35: 35  
+36: 6  
+Delete: 1 Key Comparisons: 1
+Delete: 2 Key Comparisons: 1
+Delete: 3 Key Comparisons: 1
+Delete: 4 Key Comparisons: 1
+Delete: 5 Key Comparisons: 1
+Delete: 6 Key Comparisons: 32
+Delete: 7 Key Comparisons: 1
+Delete: 8 Key Comparisons: 1
+Delete: 9 Key Comparisons: 1
+Delete: 10 Key Comparisons: 1
+Delete: 11 Key Comparisons: 1
+Delete: 12 Key Comparisons: 1
+Delete: 13 Key Comparisons: 1
+Delete: 14 Key Comparisons: 1
+Delete: 15 Key Comparisons: 1
+Delete: 16 Key Comparisons: 1
+Delete: 17 Key Comparisons: 1
+Delete: 18 Key Comparisons: 1
+Delete: 19 Key Comparisons: 1
+Delete: 20 Key Comparisons: 1
+Delete: 21 Key Comparisons: 1
+Delete: 22 Key Comparisons: 1
+Delete: 23 Key Comparisons: 1
+Delete: 24 Key Comparisons: 1
+Delete: 25 Key Comparisons: 1
+Delete: 26 Key Comparisons: 1
+Delete: 27 Key Comparisons: 1
+Delete: 28 Key Comparisons: 1
+Delete: 29 Key Comparisons: 1
+Delete: 30 Key Comparisons: 1
+Delete: 31 Key Comparisons: 1
+Delete: 32 Key Comparisons: 1
+Delete: 33 Key Comparisons: 1
+Delete: 34 Key Comparisons: 1
+Delete: 35 Key Comparisons: 1
+36 does not exist.
+Delete: 37 Key Comparisons: 1
+Delete: 38 Key Comparisons: 1
+0: 37 *
+1: 1 *
+2: 2 *
+3: 3 *
+4: 4 *
+5: 5 *
+6: 38 *
+7: 7 *
+8: 8 *
+9: 9 *
+10: 10 *
+11: 11 *
+12: 12 *
+13: 13 *
+14: 14 *
+15: 15 *
+16: 16 *
+17: 17 *
+18: 18 *
+19: 19 *
+20: 20 *
+21: 21 *
+22: 22 *
+23: 23 *
+24: 24 *
+25: 25 *
+26: 26 *
+27: 27 *
+28: 28 *
+29: 29 *
+30: 30 *
+31: 31 *
+32: 32 *
+33: 33 *
+34: 34 *
+35: 35 *
+36: 6 *
+Insert: 6 Key Comparisons: 0
+0: 37 *
+1: 1 *
+2: 2 *
+3: 3 *
+4: 4 *
+5: 5 *
+6: 6  
+7: 7 *
+8: 8 *
+9: 9 *
+10: 10 *
+11: 11 *
+12: 12 *
+13: 13 *
+14: 14 *
+15: 15 *
+16: 16 *
+17: 17 *
+18: 18 *
+19: 19 *
+20: 20 *
+21: 21 *
+22: 22 *
+23: 23 *
+24: 24 *
+25: 25 *
+26: 26 *
+27: 27 *
+28: 28 *
+29: 29 *
+30: 30 *
+31: 31 *
+32: 32 *
+33: 33 *
+34: 34 *
+35: 35 *
+36: 6 *
