@@ -88,7 +88,7 @@ int BFS (Graph g, int v, int w) {
         visited_array[i] = 0;
     }
 
-    Queue *queueueue;
+    Queue *queueueue = malloc(sizeof(Queue));
     queueueue->size = 0;
     queueueue->head = NULL;
     queueueue->tail = NULL;
