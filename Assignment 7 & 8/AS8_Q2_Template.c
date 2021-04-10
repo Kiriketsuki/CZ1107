@@ -45,6 +45,7 @@ int peek(Stack s);
 int isEmptyStack(Stack s);
 void removeAllItemsFromStack(Stack *sPtr);
 //////////////////////////////////
+int BFS (Graph G, int v, int w);
 
 int main()
 {
@@ -93,9 +94,64 @@ int main()
 
 int CC (Graph g)
 {
- // Write your code here
+    int to_return = 1;
+    for (int i = 0; i < g.V; i++) {
+        for (int j = 0; j < g.V; j++) { // double for loop == o(n^2)??
+            if (BFS(g, i+1, j+1) == -1) {
+                to_return = 0;
+                return to_return;
+            }
+        }
+    }
+    return to_return;
+}
 
-    return 1;
+int BFS (Graph g, int v, int w) { 
+    int visited_array[g.V + 1]; // plus one so wont out of range. index 0 will always be empty.
+    int i;
+    int found = 0;
+    for (i = 0; i < g.V + 1; i++) { // array of visited nodes. 0 means unvisited. index is the node that was visited. initally all nodes are unvisited. value stored is the parent that lead to this node
+        visited_array[i] = 0;
+    }
+
+    Queue *queueueue = malloc(sizeof(Queue));
+    queueueue->size = 0;
+    queueueue->head = NULL;
+    queueueue->tail = NULL;
+
+    ListNode *curr_node;
+
+    enqueue(queueueue, v);
+    visited_array[v] = v; // start node's own parent is itself
+
+    while (!isEmptyQueue(*queueueue)) {
+        int index = getFront(*queueueue);
+        if (index == w) {
+            found = 1;
+            break; // found, jump to length calc
+        }
+        dequeue(queueueue);
+
+        curr_node = g.list[index - 1];
+        while (curr_node != NULL) { // goes through the adjacency list
+            if (visited_array[curr_node->vertex] == 0) { // curr_node is unvisited
+                enqueue(queueueue, curr_node->vertex);
+                visited_array[curr_node->vertex] = index; // value is parent
+            }
+            curr_node = curr_node->next;
+        }
+    }
+
+    if (found) {
+        int curr = visited_array[w];
+        int length = 1;
+        while (curr != v) {
+            curr = visited_array[curr];
+            length++;
+        }
+        return length;
+    }
+    return -1;
 }
 
 
