@@ -73,38 +73,65 @@ void sumToC(LinkedList* ll, int C, ArrayList* al)
         return;
     }
 
-    if (ll->size == C) {
+    if (ll->size == C && ll->sum != C) {
         removeNode(ll, ll->size - 1); // remove last item in ll then return to previous state to go to next recursion
         return;
     }
 
     // recursion found solution return
 
-    ListNode *seq_ptr;
-    ArrayNode *array_ptr = al->head;
     if (ll->sum == C) {
-        while (array_ptr != NULL) {
-            array_ptr = array_ptr->next;
-        }
-        array_ptr = malloc(sizeof(ArrayNode));
-        seq_ptr = ll->head;
-        int i = 1;
-        while (seq_ptr != NULL) {
-            if (seq_ptr->item != 0) {
-                i++; // count number of non zeroes
-            }
-            seq_ptr = seq_ptr->next;
-        }
-        array_ptr->itemArray = malloc(i * sizeof(int));
+        // solution found!! increase size of al
+        al->size++;
 
-        i = 0;
-        seq_ptr = ll->head;
-        while (seq_ptr != NULL) {
-            if (seq_ptr->item != 0) {
-                array_ptr->itemArray[i] = seq_ptr->item;
+        // create arraynode from linked list
+        ListNode *ll_ptr = ll->head;
+
+        // calc how many non zeroes in linked list
+        int i = 0;
+        while (ll_ptr != NULL) {
+            if (ll_ptr->item != 0) {
+                i++;
             }
+            ll_ptr = ll_ptr->next;
         }
-        removeNode(ll, ll->size); // remove last item in ll then return to previous state to go to next recursion
+
+        // i is number of items to add to itemArray
+        ArrayNode *linked_list = malloc(sizeof(ArrayNode)); // create array node
+        linked_list->sizeArray = 0; // size set to 0
+        linked_list->itemArray = malloc(i * sizeof(int)); // allocate size of array, set to how many non zero items needed to be added
+
+        // add items from ll to array node
+        ll_ptr = ll->head;
+        i = 0;
+        while (ll_ptr != NULL) {
+            if (ll_ptr->item != 0) {
+                linked_list->itemArray[i] = ll_ptr->item; // add item from ll to node
+                i++; // increase index of array
+                linked_list->sizeArray++; // increase size of array
+            }
+            ll_ptr = ll_ptr->next;
+        }
+
+        // attach array node to al
+        if (al->head == NULL) { // new al
+            al->head = linked_list; // make temp array node the new head of al
+            al->head->next = NULL; // next is null
+        } else { // not new al
+            ArrayNode *al_ptr = al->head;
+            ArrayNode *prev;
+
+            while (al_ptr != NULL) {
+                prev = al_ptr;
+                al_ptr = al_ptr->next;
+            }
+            prev->next = linked_list;
+            prev->next->next = NULL;
+            // al_ptr = linked_list;
+        }
+        
+        // remove latest node in linked list to carry on backtracking
+        removeNode(ll, ll->size - 1);
         return;
     }
 
@@ -116,19 +143,20 @@ void sumToC(LinkedList* ll, int C, ArrayList* al)
     // dfs go to left child. left child is insert index + 1 at index. aka 3 at [2]
 
     insertNode(ll, index, to_insert);
+    // printf("entering recursion\n");
     sumToC(ll, C, al);
 
-    // dfs go to right chil. right child is insert 0 at index, aka 0 at [2]
+    // dfs go to right child. right child is insert 0 at index, aka 0 at [2]
     // it will get here after returning from the previous statement
 
     insertNode(ll, index, 0);
     sumToC(ll, C, al);
 
     // exit out of recursion OR for backtracking
-
-    removeNode(ll, ll->size - 1);
+    removeNode(ll, ll->size-1);
     return;
 }
+
 ///////////////////////////////////////////////////////
 int insertNode(LinkedList *ll, int index, int value){
 
