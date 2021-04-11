@@ -3,13 +3,13 @@
 
 typedef struct _arraynode
 {
-    int *itemArray;
-    int sizeArray;
+    int *itemArray; // the sequence
+    int sizeArray; // the size of this particular sequence
     struct _arraynode *next;
 }ArrayNode;
 
 typedef struct _arraylist{
-   int size; //the size of a possible sequence
+   int size; // total number of possible sequences
    ArrayNode *head;
 } ArrayList;
 
@@ -66,7 +66,68 @@ int main()
 
 void sumToC(LinkedList* ll, int C, ArrayList* al)
 {
-   // Write your code here
+    // recursion base case returns
+
+    if (ll->sum > C) {
+        removeNode(ll, ll->size - 1); // remove last item in ll then return to previous state to go to next recursion
+        return;
+    }
+
+    if (ll->size == C) {
+        removeNode(ll, ll->size - 1); // remove last item in ll then return to previous state to go to next recursion
+        return;
+    }
+
+    // recursion found solution return
+
+    ListNode *seq_ptr;
+    ArrayNode *array_ptr = al->head;
+    if (ll->sum == C) {
+        while (array_ptr != NULL) {
+            array_ptr = array_ptr->next;
+        }
+        array_ptr = malloc(sizeof(ArrayNode));
+        seq_ptr = ll->head;
+        int i = 1;
+        while (seq_ptr != NULL) {
+            if (seq_ptr->item != 0) {
+                i++; // count number of non zeroes
+            }
+            seq_ptr = seq_ptr->next;
+        }
+        array_ptr->itemArray = malloc(i * sizeof(int));
+
+        i = 0;
+        seq_ptr = ll->head;
+        while (seq_ptr != NULL) {
+            if (seq_ptr->item != 0) {
+                array_ptr->itemArray[i] = seq_ptr->item;
+            }
+        }
+        removeNode(ll, ll->size); // remove last item in ll then return to previous state to go to next recursion
+        return;
+    }
+
+    // begin recursion
+
+    int index = ll->size;
+    int to_insert = index + 1; // insert 3 at [2] or insert 0 at [2]
+
+    // dfs go to left child. left child is insert index + 1 at index. aka 3 at [2]
+
+    insertNode(ll, index, to_insert);
+    sumToC(ll, C, al);
+
+    // dfs go to right chil. right child is insert 0 at index, aka 0 at [2]
+    // it will get here after returning from the previous statement
+
+    insertNode(ll, index, 0);
+    sumToC(ll, C, al);
+
+    // exit out of recursion OR for backtracking
+
+    removeNode(ll, ll->size - 1);
+    return;
 }
 ///////////////////////////////////////////////////////
 int insertNode(LinkedList *ll, int index, int value){
