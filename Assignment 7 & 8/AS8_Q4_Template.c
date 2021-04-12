@@ -28,8 +28,6 @@ typedef struct _stack
 	StackNode *head;
 } Stack;
 
-void insertAdjVertex(ListNode** AdjList,int vertex);
-void removeAdjVertex(ListNode** AdjList,int vertex);
 void printGraphList(Graph );
 int *BFS(Graph g, int v, int w); // now returns visited array
 int BFS_len_calc(int *visited, int v, int w);
@@ -64,7 +62,7 @@ int main()
     // char dummychar;
 
     // get number of students projects and mentors
-    // printf("Enter number of students, number of projects, and number of mentors: \n");
+    printf("Enter number of students, number of projects, and number of mentors: \n");
     scanf("%d %d %d", &students, &projects, &mentors);
 
     int total_vertices = students + projects + mentors + 2; // assuming 2 2 2, there are 8 total vertices including sink and source. excluding zeroth
@@ -150,7 +148,7 @@ int main()
         student_index = i + students_offset;
 
         // get input from student i
-        // printf("For student %d: enter number of preferred projects, number of preferred mentors, IDs of preferred projects, and IDs of preferred mentors\n", i);
+        printf("For student %d: enter number of preferred projects, number of preferred mentors, IDs of preferred projects, and IDs of preferred mentors\n", i);
         
         // get number of pref projs for student i, and number of pref mentors for student i
         scanf("%d %d", &pref_projs_no, &pref_ments_no);
@@ -178,20 +176,17 @@ int main()
             insert_adjacency(original_graph->list[student_index], pref_ment_index);
         }
     }
-    // printGraphList(*original_graph);
-
-    // printf("from source to mentor 2, length shld be 3\n");
-    // printf("bfs gives length of %d\n", BFS_len_calc(BFS(*original_graph, 1, 2 + mentors_offset), 1, 2 + mentors_offset));
+    printGraphList(*original_graph);
+    
     // Stack *path = reform_path(BFS(*original_graph, 1, 2 + mentors_offset), 1, 2 + mentors_offset);
     // printf("path is \n");
     // while (!isEmptyStack(*path)) {
     //     printf("%d ", peek(*path));
     //     pop(path);
     // }
-    
+
     int max_flow = matching(*original_graph);
-    printf("%d\n", max_flow);
-    // printf("there are %d number of matches for the graph\n", max_flow);
+    printf("\n%d\n", max_flow);
     return 0;
 }
 
@@ -299,19 +294,17 @@ int matching(Graph g)
 
         // form path
         curr_path = reform_path(visited, 1, g.V - 1); // top of stack is source, bottom is sink top points to next currently, ie 1 points to 2, 2 points to 5, 5 points to 7
-        // printf("path found is\n");
-        // while (!isEmptyStack(*curr_path)) {
-        //     printf("%d ", peek(*curr_path));
-        //     pop(curr_path);
-        // }
+        printf("\npath found is\n");
+        while (!isEmptyStack(*curr_path)) {
+            printf("%d ", peek(*curr_path));
+            pop(curr_path);
+        }
         curr_path = reform_path(visited, 1, g.V - 1);
 
         // reverse path
         top = peek(*curr_path);
         pop(curr_path);
 
-        // printf("before flip\n");
-        // printGraphList(g);
         while (!isEmptyStack(*curr_path)) {
             next = peek(*curr_path);
             pop(curr_path);
@@ -325,8 +318,6 @@ int matching(Graph g)
             // make top next for next iteration
             top = next;
         }
-        // printf("after flip\n");
-        // printGraphList(g);
     }
     
     return to_return;
@@ -372,45 +363,6 @@ void insert_adjacency(ListNode *list, int value) {
     }
 }
 
-void removeAdjVertex(ListNode** AdjList,int vertex)
-{
-    ListNode *temp, *preTemp;
-    if(*AdjList != NULL)
-    {
-        if((*AdjList)->vertex ==vertex){//first node
-            temp = *AdjList;
-            *AdjList = (*AdjList)->next;
-            free(temp);
-            return;
-        }
-        preTemp = *AdjList;
-        temp = (*AdjList)->next;
-        while(temp!=NULL && temp->vertex != vertex)
-        {
-            preTemp= temp;
-            temp = temp->next;
-        }
-        preTemp->next = temp->next;
-        free(temp);
-    }
-
-}
-void insertAdjVertex(ListNode** AdjList,int vertex)
-{
-    ListNode *temp;
-    if(*AdjList==NULL)
-    {
-        *AdjList = (ListNode *)malloc(sizeof(ListNode));
-        (*AdjList)->vertex = vertex;
-        (*AdjList)->next = NULL;
-    }
-    else{
-        temp = (ListNode *)malloc(sizeof(ListNode));
-        temp->vertex = vertex;
-        temp->next = *AdjList;
-        *AdjList = temp;
-    }
-}
 void enqueue(Queue *qPtr, int vertex) {
     QueueNode *newNode;
     newNode = malloc(sizeof(QueueNode));
