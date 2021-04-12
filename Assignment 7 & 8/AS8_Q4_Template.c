@@ -34,6 +34,9 @@ void printGraphList(Graph );
 int *BFS(Graph g, int v, int w); // now returns visited array
 int BFS_len_calc(int *visited, int v, int w);
 Stack *reform_path(int *visited, int v, int w);
+Queue *reform_path_queue(int *visited, int v, int w);
+void insert_adjacency(ListNode *list, int value);
+void remove_adjacency(ListNode *list, int value);
 int matching(Graph g);
 
 void enqueue(Queue *qPtr, int item);
@@ -61,7 +64,7 @@ int main()
     // char dummychar;
 
     // get number of students projects and mentors
-    printf("Enter number of students, number of projects, and number of mentors: \n");
+    // printf("Enter number of students, number of projects, and number of mentors: \n");
     scanf("%d %d %d", &students, &projects, &mentors);
 
     int total_vertices = students + projects + mentors + 2; // assuming 2 2 2, there are 8 total vertices including sink and source. excluding zeroth
@@ -130,38 +133,14 @@ int main()
     // connect source to projects
     for (i = 1; i < projects + 1; i++) {
         index = i + projects_offset;
-        ListNode *source_pointer = original_graph->list[1]; // 1 is source
-
-        if (source_pointer->vertex == NO_CONNECTION) { // no previous connections
-            source_pointer->vertex = index; // point to project
-            source_pointer->next = NULL;
-        } else {
-            while (source_pointer->next != NULL) {
-                source_pointer = source_pointer->next;
-            }
-            source_pointer->next = malloc(sizeof(ListNode)); 
-            source_pointer->next->vertex = index; // point to project
-            source_pointer->next->next = NULL;
-        }
+        insert_adjacency(original_graph->list[1], index); 
         
     }
 
     // connect mentors to sink
     for (i = 1; i < mentors + 1; i++) {
         index = i + mentors_offset;
-        ListNode *mentor_pointer = original_graph->list[index]; // index is mentor
-
-        if (mentor_pointer->vertex == NO_CONNECTION) { // no previous connections
-            mentor_pointer->vertex = total_vertices; // point to sink
-            mentor_pointer->next = NULL;
-        } else {
-            while (mentor_pointer->next != NULL) {
-                mentor_pointer = mentor_pointer->next;
-            }
-            mentor_pointer->next = malloc(sizeof(ListNode));
-            mentor_pointer->next->vertex = total_vertices; // index of sink is total vertices
-            mentor_pointer->next->next = NULL;
-        }        
+        insert_adjacency(original_graph->list[index], total_vertices);
     }
 
     // get inputs from each student
@@ -171,7 +150,7 @@ int main()
         student_index = i + students_offset;
 
         // get input from student i
-        printf("For student %d: enter number of preferred projects, number of preferred mentors, IDs of preferred projects, and IDs of preferred mentors\n", i);
+        // printf("For student %d: enter number of preferred projects, number of preferred mentors, IDs of preferred projects, and IDs of preferred mentors\n", i);
         
         // get number of pref projs for student i, and number of pref mentors for student i
         scanf("%d %d", &pref_projs_no, &pref_ments_no);
@@ -184,20 +163,7 @@ int main()
             pref_proj_index = pref_proj_index + projects_offset;
 
             // connect project to student
-            project_pointer = original_graph->list[pref_proj_index];
-
-            if (project_pointer->vertex == NO_CONNECTION) { // no previous connections
-                project_pointer->vertex = student_index; // point to student
-                project_pointer->next = NULL;
-            } else {
-                while (project_pointer->next != NULL) {
-                    project_pointer = project_pointer->next;
-                }
-
-                project_pointer->next = malloc(sizeof(ListNode));
-                project_pointer->next->vertex = student_index; // point to student
-                project_pointer->next->next = NULL;
-            }
+            insert_adjacency(original_graph->list[pref_proj_index], student_index);
             
         }
 
@@ -209,34 +175,23 @@ int main()
             pref_ment_index = pref_ment_index + mentors_offset;
 
             // connect student to mentor
-            student_pointer = original_graph->list[student_index];
-            if (student_pointer->vertex == NO_CONNECTION) {
-                student_pointer->vertex = pref_ment_index;
-            } else {
-                while (student_pointer->next != NULL) {
-                    student_pointer = student_pointer->next;
-                }
-                student_pointer->next = malloc(sizeof(ListNode));
-                student_pointer->next->vertex = pref_ment_index;
-                student_pointer->next->next = NULL;
-            }
+            insert_adjacency(original_graph->list[student_index], pref_ment_index);
         }
     }
-    printGraphList(*original_graph);
-    printf("from source to mentor 2, length shld be 3\n");
-    printf("bfs gives length of %d\n", BFS_len_calc(BFS(*original_graph, 1, 2 + mentors_offset), 1, 2 + mentors_offset));
-    Stack *path = reform_path(BFS(*original_graph, 1, 2 + mentors_offset), 1, 2 + mentors_offset);
-    // StackNode *temp = path->head;
-    printf("path is \n");
-    while (!isEmptyStack(*path)) {
-        printf("%d ", peek(*path));
-        pop(path);
-    }
-    //Write your code
-	
-    //apply Ford Fulkerson algorithm
-    // use DFS or BFS to find a path
-	
+    // printGraphList(*original_graph);
+
+    // printf("from source to mentor 2, length shld be 3\n");
+    // printf("bfs gives length of %d\n", BFS_len_calc(BFS(*original_graph, 1, 2 + mentors_offset), 1, 2 + mentors_offset));
+    // Stack *path = reform_path(BFS(*original_graph, 1, 2 + mentors_offset), 1, 2 + mentors_offset);
+    // printf("path is \n");
+    // while (!isEmptyStack(*path)) {
+    //     printf("%d ", peek(*path));
+    //     pop(path);
+    // }
+    
+    int max_flow = matching(*original_graph);
+    printf("%d\n", max_flow);
+    // printf("there are %d number of matches for the graph\n", max_flow);
     return 0;
 }
 
@@ -326,10 +281,95 @@ Stack *reform_path(int *visited, int v, int w) {
 
 int matching(Graph g)
 {
+    int to_return = 0;
+    int *visited;
+    Stack *curr_path;
+    int top;
+    int next;
 
+    while(1) {
+        // find path
+        visited = BFS(g, 1, g.V - 1); // 1 is source, g.V is total nodes including 0th, g.V - 1 is index of sink
+        if (BFS_len_calc(visited, 1, g.V - 1) == -1) { // path doesnt exist
+            break;
+        }
+
+        // increase counter
+        to_return++;
+
+        // form path
+        curr_path = reform_path(visited, 1, g.V - 1); // top of stack is source, bottom is sink top points to next currently, ie 1 points to 2, 2 points to 5, 5 points to 7
+        // printf("path found is\n");
+        // while (!isEmptyStack(*curr_path)) {
+        //     printf("%d ", peek(*curr_path));
+        //     pop(curr_path);
+        // }
+        curr_path = reform_path(visited, 1, g.V - 1);
+
+        // reverse path
+        top = peek(*curr_path);
+        pop(curr_path);
+
+        // printf("before flip\n");
+        // printGraphList(g);
+        while (!isEmptyStack(*curr_path)) {
+            next = peek(*curr_path);
+            pop(curr_path);
+
+            // remove adjacency
+            remove_adjacency(g.list[top], next);
+
+            // add new adjacency
+            insert_adjacency(g.list[next], top);
+
+            // make top next for next iteration
+            top = next;
+        }
+        // printf("after flip\n");
+        // printGraphList(g);
+    }
     
-    return 0;
+    return to_return;
+}
 
+void remove_adjacency(ListNode *list, int value) {
+    ListNode *curr;
+    ListNode *prev;
+
+    // find value
+    int i = 0;
+    curr = list;
+
+    if (curr->vertex == value && curr->next == NULL) { // first value in the list. only value in the list
+        curr->vertex = NO_CONNECTION;
+        return;
+    } else if (curr->vertex == value) { // first value but not only value
+        curr->vertex = curr->next->vertex;
+        curr->next->vertex = value;
+    }
+
+    while (curr->vertex != value) {
+        prev = curr;
+        curr = curr->next;
+    }
+
+    prev->next = curr->next;
+    free(curr);
+}
+
+void insert_adjacency(ListNode *list, int value) {
+    ListNode *curr;
+    curr = list;
+    if (curr->vertex == NO_CONNECTION) {
+        curr->vertex = value;
+    } else {
+        while (curr->next != NULL) {
+            curr = curr->next;
+        }
+        curr->next = malloc(sizeof(ListNode));
+        curr->next->vertex = value;
+        curr->next->next = NULL;
+    }
 }
 
 void removeAdjVertex(ListNode** AdjList,int vertex)
