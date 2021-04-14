@@ -41,9 +41,11 @@ void remove_adjacency(ListNode **adjacent_list, int **adjacent_matrix, int was_a
 void print_graph_list(Graph g);
 void print_graph_matrix(int **matrix, int size);
 int **copy_graph_matrix(int **original_matrix, int size);
-int matching(Graph *graph, int projects, int students, int mentors, int **original_matrix);
-int *BFS (Graph *g, int start, int goal);
-int *BFS_list (Graph g, int v, int w);
+int *UCS(int **capacity_matrix, Graph *graph, int start, int goal);
+int **edmonds_karp(Graph *graph, int **original_matrix, int start, int goal); // returns flow matrix
+int flow_calc_in(int **flow_matrix, int flow_into, int size); // calculate flow into a vertex
+int flow_calc_out(int **flow_matrix, int flow_out, int size); // calculate flow from a vertex
+int matching(Graph *graph, int **original_matrix);
 int length_calc(int *visited, int v, int w);
 Stack *reform_path(int *visited, int v, int w);
 int is_in_matrix(int **matrix, int pointer, int pointed);
@@ -67,7 +69,7 @@ int main() {
     int projects, students, mentors;
     int **original_graph_matrix;
     Graph *graph;
-    printf("Enter number of students, projects, and mentors:\n");
+    // printf("Enter number of students, projects, and mentors:\n");
     scanf("%d %d %d", &students, &projects, &mentors);
 
     graph = create_graph(projects, students, mentors);
@@ -76,20 +78,7 @@ int main() {
     // print_graph_matrix(graph->matrix, graph->V);
     original_graph_matrix = copy_graph_matrix(graph->matrix, graph->V);
 
-
-    printf("finding path from source to sink\n");
-    int *visited_array_matrix = BFS(graph, 1, 1 + graph->sink_offset);
-    int *visited_array_list = BFS_list(*graph, 1, 1 + graph->sink_offset);
-    // printf("length of path is %d\n", length_calc(visited_array, 1, graph->sink_offset + 1));
-    printf("matrix path is \n");
-    Stack *path = reform_path(visited_array_matrix, 1, graph->sink_offset + 1);
-    print_stack(path->head);
-
-    printf("list path is \n");
-    path = reform_path(visited_array_list, 1, graph->sink_offset + 1);
-    print_stack(path->head);
-
-    int max_matches = matching(graph, projects, students, mentors, original_graph_matrix);
+    int max_matches = matching(graph, original_graph_matrix);
     printf("%d\n", max_matches);
 }
 
@@ -98,7 +87,7 @@ Graph *create_graph(int projects, int students, int mentors) {
     int i, j;
     Graph *to_return = malloc(sizeof(Graph));
     to_return->E = 0;
-    to_return->V = 3 + projects + students + mentors; // the 3 are zeroth, src, and sink
+    to_return->V = 5 + projects + students + mentors; // the 5 are zeroth, source 1 source 2, and sink 1 sink 2. source and sink 1 are for project student matching. source and sink 2 are for student mentor matching
 
     // form graph's matrix. matrix[i][j] represents capacity from i to j
     to_return->matrix = (int **)malloc(to_return->V * sizeof(int *));
@@ -120,11 +109,11 @@ Graph *create_graph(int projects, int students, int mentors) {
     }
 
     // set offsets; index of vertex is offset plus whichever value it is
-    int source_offset = 0; // source is 1 + offset
-    int project_offset = 1; // 1st project is at 1 + offset
-    int student_offset = 1 + projects; // 1st student is at 1 + offset
-    int mentor_offset = 1 + projects + students; // 1st mentor is at 1 + offset
-    int sink_offset = 1 + projects + students + mentors; // sink is last node or 1 + offset
+    int source_offset = 0; // source is 1 + offset. offset is zeroth
+    int project_offset = 2; // 1st project is at 1 + offset. offsets are the 2 sources
+    int student_offset = 2 + projects; // 1st student is at 1 + offset
+    int mentor_offset = 2 + projects + students; // 1st mentor is at 1 + offset
+    int sink_offset = 2 + projects + students + mentors; // sink is last node or 1 + offset
 
     // connect offsets
     to_return->project_offset = project_offset;
@@ -132,33 +121,49 @@ Graph *create_graph(int projects, int students, int mentors) {
     to_return->mentor_offset = mentor_offset;
     to_return->sink_offset = sink_offset;
 
-    // make source point to all projects
+    // make source 1 point to all projects. src_1 -> project -> student -> sink_1
     int project_index;
     for (i = 1; i < projects + 1; i++) {
         project_index = i + project_offset;
-        add_adjacency(&(to_return->list[1]), &(to_return->matrix[1]), project_index);
-        to_return->matrix[project_index][i] = 0; // make capacity in opposite direction 0
+        add_adjacency(&(to_return->list[1]), &(to_return->matrix[1]), project_index); // [1] is first source
+        to_return->matrix[project_index][1] = 0; // make capacity in opposite direction 0
         to_return->E++;
     }
 
-    // make all mentors point to sink
+    // make source 2 point to all students. src_2 -> student -> mentor -> sink_2
+    int student_index;
+    for (i = 1; i < students + 1; i++) {
+        student_index = i + student_offset;
+        add_adjacency(&(to_return->list[2]), &(to_return->matrix[2]), student_index);
+        to_return->matrix[student_index][2] = 0; // make capacity in opposite direction 0
+        to_return->E++;
+    }
+
+    // make all students point to sink 1. src_1 -> project -> student -> sink_1
+    for (i = 1; i < students + 1; i++) {
+        student_index = i + student_offset;
+        add_adjacency(&(to_return->list[student_index]), &(to_return->matrix[student_index]), 1 + sink_offset);
+        to_return->matrix[1 + sink_offset][student_index] = 0; // make capacity in opposite direction 0
+        to_return->E++;
+    }
+
+    // make all mentors point to sink 2. src_2 -> student -> mentor -> sink_2
     int mentor_index;
     for (i = 1; i < mentors + 1; i++) {
         mentor_index = i + mentor_offset;
-        add_adjacency(&(to_return->list[mentor_index]), &(to_return->matrix[mentor_index]), 1 + sink_offset);
+        add_adjacency(&(to_return->list[mentor_index]), &(to_return->matrix[mentor_index]), 2 + sink_offset);
         to_return->matrix[1+sink_offset][mentor_index] = 0; // make capacity in opposite direction 0
         to_return->E++;
     }
 
-    // prompt student for inputs
-    int student_index;
+    // prompt student for inputs. src_1 -> project -> student -> sink_1
     for (i = 1; i < students + 1; i++) {
         int preferred_projects_amount, preferred_mentors_amount;
         student_index = i + student_offset;
         // printf("For student %d: enter number of preferred projects, number of preferred mentors, IDs of preferred projects, and IDs of preferred mentors\n", i);
         scanf("%d %d", &preferred_projects_amount, &preferred_mentors_amount);
 
-        // get project id for student
+        // get project id for student. 
         for (j = 1; j < preferred_projects_amount + 1; j++) {
             scanf("%d", &project_index);
             project_index = project_index + project_offset;
@@ -169,7 +174,7 @@ Graph *create_graph(int projects, int students, int mentors) {
             to_return->E++;
         }
 
-        // get mentor id for student
+        // get mentor id for student. src_2 -> student -> mentor -> sink_2
         for (j = 1; j < preferred_mentors_amount + 1; j++) {
             scanf("%d", &mentor_index);
             mentor_index = mentor_index + mentor_offset;
@@ -276,97 +281,112 @@ int **copy_graph_matrix(int **original_matrix, int size) {
     return to_return;
 }
 
-int matching(Graph *graph, int projects, int students, int mentors, int **original_matrix) {
-    int minimum_flow = 1;
-    int i, j;
+int *UCS(int **capacity_matrix, Graph *graph, int start, int goal) { // UCS == BFS when cost is the same. Capacity is 1 for every edge so implementing BFS first
+    int *visited_array = malloc(graph->V * sizeof(int));
+    int i;
+    int index;
+    for (i = 0; i < graph->V; i++) {
+        visited_array[i] = 0;
+    }
 
-    // initialize flow
+    Queue *queueueue = malloc(sizeof(Queue));
+    queueueue->head = NULL;
+    queueueue->tail = NULL;
+    queueueue->size = 0;
+
+    enqueue(queueueue, start);
+    visited_array[start] = start; // start parent's is itself
+
+    while (!is_empty_queue(*queueueue)) {
+        index = get_front(*queueueue);
+        dequeue(queueueue);
+        if (index == goal) {
+            break;
+        }
+        
+        for (i = 0; i < graph->V; i++) {
+            if (capacity_matrix[index][i] == 1 && visited_array[i] == 0) { // there is capacity along the edge from index to i. change == 1 for to something else for true UCS
+                enqueue(queueueue, i);
+                visited_array[i] = index; // set i's parent as index. aka i was visited because of index
+            }
+        }
+    }
+
+    // remove_all_items_from_queue(queueueue);
+
+    return visited_array;
+}
+
+int **edmonds_karp(Graph *graph, int **original_matrix, int start, int goal) {
+    int to_return = 0;
+    int i, j;
+    int minimum_flow = 1; // matching so flow is 1
+
+    // initialize flow;
     int **flow_matrix = copy_graph_matrix(original_matrix, graph->V);
 
     for (i = 0; i < graph->V; i++) {
         for (j = 0; j < graph->V; j++) {
-            if (flow_matrix[i][j] != NO_CONNECTION) {
-                flow_matrix[i][j] = 0;
+            if (flow_matrix[i][j] != NO_CONNECTION) { // NO_CONNECTION remains as NO_CONNECTION
+                flow_matrix[i][j] = 0; // set flow to and from every existing edge to 0
             }
         }
     }
 
-    // start finding path
+    // find path
     int path_length = 1;
-    int *visted_array;
+    int *visited_array;
     Stack *path;
     int first_vertex, second_vertex;
 
-    while (path_length != -1) { // length calc returns -1 if no path
-        // find path from source, 1, to sink, 1 + sink offset
-        visted_array = BFS(graph, 1, graph->sink_offset + 1);
-        path_length = length_calc(visted_array, 1, graph->sink_offset + 1);
+    while (path_length != -1) {
+        // find path from start to goal
+        visited_array = UCS(graph->matrix, graph, start, goal); // graph is used as residual graph. pass in graph->matrix. original_matrix is for preserving the graph matrix before matching flips the edges
+        path_length = length_calc(visited_array, start, goal);
         if (path_length == -1) {
             break;
         }
-        path = reform_path(visted_array, 1, graph->sink_offset + 1);
-        printf("path found in matching is \n");
-        print_stack(path->head);
 
-        printf("matrix before\n");
-        print_graph_matrix(graph->matrix, graph->V);
+        path = reform_path(visited_array, start, goal);
 
         // start for loop
         first_vertex = peek(*path);
         pop(path);
+
         while (!is_empty_stack(*path)) {
             second_vertex = peek(*path);
 
-            // start adding flow
-            if (is_in_matrix(original_matrix, first_vertex, second_vertex)) {
-                // printf("added something!!\n");
+            // add new flow
+            if (is_in_matrix(original_matrix, first_vertex, second_vertex)) { // first_vertex -> second_vertex exists in the original graph
                 flow_matrix[first_vertex][second_vertex] += minimum_flow;
             } else {
-                // printf("minused something!!\n");
-                flow_matrix[first_vertex][second_vertex] -= minimum_flow;
+                flow_matrix[second_vertex][first_vertex] -= minimum_flow;
             }
 
-            // update capacity of residual graph (original graph is enough)
-            remove_adjacency(&(graph->list[first_vertex]), &(graph->matrix[first_vertex]), second_vertex); // function sets to 0 capacity instead of NO_CAPACITY
-            add_adjacency(&(graph->list[second_vertex]), &(graph->matrix[second_vertex]), first_vertex);
+            // update residual graph
+            remove_adjacency(&(graph->list[first_vertex]), &(graph->matrix[first_vertex]), second_vertex); // function modifies the matrix, changes from 1 to 0, which is the same as subtracting minimum flow
+            add_adjacency(&(graph->list[second_vertex]), &(graph->matrix[second_vertex]), first_vertex); // function modifies the matrix, changes from 0 to 1, which is the same as adding minimum flow
 
+            // update vertices
             first_vertex = second_vertex;
-            pop(path);
+            pop(path); // second vertex will be update at the next iteration
         }
-        printf("matrix after\n");
-        print_graph_matrix(graph->matrix, graph->V);
+
+        // printf("after flipping\n");
+        // print_graph_list(*graph);
     }
 
+    // free
+    // remove_all_items_from_stack(path);
+    // free(visited_array);
+    
+    return flow_matrix;
+}
+
+int flow_calc_in(int **flow_matrix, int flow_into, int size) {
     int to_return = 0;
-
-    printf("printing flow matrix\n");
-    print_graph_matrix(flow_matrix, graph->V);
-
-    // loop through every student. if they have flow from a project and to a mentor they have a match
-    int student_index;
-    int project_index;
-    int mentor_index;
-    int has_project;
-    int has_mentor;
-    for (i = 1; i < students + 1; i++) {
-        has_project = 0;
-        has_mentor = 0;
-        student_index = i + graph->student_offset;
-        for (j = 1; j < projects + 1; j++) {
-            project_index = j + graph->project_offset;
-            if (flow_matrix[project_index][student_index] == 1) {
-                has_project = 1;
-            }
-        }
-
-        for (j = 1; j < mentors + 1; j++) {
-            mentor_index = j + graph->mentor_offset;
-            if(flow_matrix[student_index][mentor_index] == 1) {
-                has_mentor = 1;
-            }
-        }
-
-        if (has_project * has_project) { // easter!! egg. code written in april so this checks out
+    for (int i = 0; i < size; i++) {
+        if (flow_matrix[i][flow_into] == 1) {
             to_return++;
         }
     }
@@ -374,78 +394,45 @@ int matching(Graph *graph, int projects, int students, int mentors, int **origin
     return to_return;
 }
 
-int *BFS(Graph *g, int start, int goal) {
-    int *visited_array = malloc(g->V *sizeof(int));
-    int i = 0;
-    int j = 0;
-    for (i = 0; i < g->V; i++) {
-        visited_array[i] = 0;
-    }
-
-    Queue *queueueueue = malloc(sizeof(Queue));
-    queueueueue->head = NULL;
-    queueueueue->tail = NULL;
-    queueueueue->size = 0;
-
-    ListNode *curr_node;
-
-    enqueue(queueueueue, start);
-    visited_array[start] = start;
-
-    while (!is_empty_queue(*queueueueue)) {
-        int index = get_front(*queueueueue);
-        if (index == goal) {
-            break;
-        }
-        dequeue(queueueueue);
-
-        for (i = 0; i < g->V; i++) {
-            if (g->matrix[index][i] == 1) {
-                enqueue(queueueueue, i);
-                visited_array[i] = index;
-            }
+int flow_calc_out(int **flow_matrix, int flow_out, int size) {
+    int to_return = 0;
+    for (int i = 0; i < size; i++) {
+        if (flow_matrix[flow_out][i] == 1) {
+            to_return++;
         }
     }
 
-    return visited_array;
+    return to_return;
 }
 
-int *BFS_list(Graph g, int v, int w) {
-    int *visited_array = malloc(g.V * sizeof(int));
-    int i;
-    int found = 0;
-    for (i = 0; i < g.V; i++) { // array of visited nodes. 0 means unvisited. index is the node that was visited. initally all nodes are unvisited. value stored is the parent that lead to this node
-        visited_array[i] = 0;
+int matching(Graph *graph, int **original_matrix) {
+    int **p_to_s_matrix;
+    int **s_to_m_matrix;
+    int p_to_s, s_to_m;
+
+    // src_1 -> project -> student -> sink_1
+    // printf("finding source 1 to project to student to sink 1\n");
+    p_to_s_matrix = edmonds_karp(graph, original_matrix, 1, graph->sink_offset + 1);
+
+    // calculate flow from student into sink 1
+    p_to_s = flow_calc_in(p_to_s_matrix, graph->sink_offset + 1, graph->V);
+
+    // src_2 -> student -> mentor -> sink_2
+    // printf("finding source 2 to student to mentor to sink 2\n");
+    s_to_m_matrix = edmonds_karp(graph, original_matrix, 2, graph->sink_offset + 2);
+
+    // calculate flow from source 2 to student
+    s_to_m = flow_calc_out(s_to_m_matrix, 2, graph->V);
+
+    // free
+    // free(p_to_s_matrix);
+    // free(s_to_m_matrix);
+
+    if (s_to_m <= p_to_s) {
+        return s_to_m;
+    } else {
+        return p_to_s;
     }
-
-    Queue *queueueue = malloc(sizeof(Queue));
-    queueueue->size = 0;
-    queueueue->head = NULL;
-    queueueue->tail = NULL;
-
-    ListNode *curr_node;
-
-    enqueue(queueueue, v);
-    visited_array[v] = v; // start node's own parent is itself
-
-    while (!is_empty_queue(*queueueue)) {
-        int index = get_front(*queueueue);
-        if (index == w) {
-            break;
-        }
-        dequeue(queueueue);
-
-        curr_node = g.list[index];
-        while (curr_node != NULL) { // goes through the adjacency list
-            if (visited_array[curr_node->vertex] == 0) { // curr_node is unvisited
-                enqueue(queueueue, curr_node->vertex);
-                visited_array[curr_node->vertex] = index; // value is parent
-            }
-            curr_node = curr_node->next;
-        }
-    }
-
-    return visited_array;
 }
 
 int length_calc(int *visited, int v, int w) {
