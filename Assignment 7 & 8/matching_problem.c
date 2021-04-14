@@ -41,8 +41,8 @@ void remove_adjacency(ListNode **adjacent_list, int **adjacent_matrix, int was_a
 void print_graph_list(Graph g);
 void print_graph_matrix(int **matrix, int size);
 int **copy_graph_matrix(int **original_matrix, int size);
-int *UCS(int **capacity_matrix, Graph *graph, int start, int goal);
-int **edmonds_karp(Graph *graph, int **original_matrix, int start, int goal); // returns flow matrix
+int *UCS(int **capacity_matrix, Graph *graph, int start, int goal, int minimum, int maximum);
+int **edmonds_karp(Graph *graph); // returns flow matrix
 int flow_calc_in(int **flow_matrix, int flow_into, int size); // calculate flow into a vertex
 int flow_calc_out(int **flow_matrix, int flow_out, int size); // calculate flow from a vertex
 int matching(Graph *graph, int **original_matrix);
@@ -77,6 +77,13 @@ int main() {
     // print_graph_list(*graph);
     // print_graph_matrix(graph->matrix, graph->V);
     original_graph_matrix = copy_graph_matrix(graph->matrix, graph->V);
+
+    // test UCS
+    // int *visited_test = UCS(graph->matrix, graph, 1, 2 + graph->sink_offset, -1, NO_CONNECTION);
+    // printf("length from src 1 to sink 2 is %d\n", length_calc(visited_test, 1, 2 + graph->sink_offset));
+    // printf("path found is\n");
+    // Stack *test_path = reform_path(visited_test, 1, 2 + graph->sink_offset);
+    // print_stack(test_path->head);
 
     int max_matches = matching(graph, original_graph_matrix);
     printf("%d\n", max_matches);
@@ -163,6 +170,7 @@ Graph *create_graph(int projects, int students, int mentors) {
         // printf("For student %d: enter number of preferred projects, number of preferred mentors, IDs of preferred projects, and IDs of preferred mentors\n", i);
         scanf("%d %d", &preferred_projects_amount, &preferred_mentors_amount);
 
+
         // get project id for student. 
         for (j = 1; j < preferred_projects_amount + 1; j++) {
             scanf("%d", &project_index);
@@ -183,6 +191,21 @@ Graph *create_graph(int projects, int students, int mentors) {
             add_adjacency(&(to_return->list[student_index]), &(to_return->matrix[student_index]), mentor_index);
             to_return->matrix[mentor_index][student_index] = 0; // make capacity in opposite direction 0
             to_return->E++;
+        }
+
+        // neuter the student if it inputs 0 for either input. neuter after scanf so it doesnt ruin future inputs.
+        if (!(preferred_mentors_amount * preferred_projects_amount)) {
+            for (j = 0; j < to_return->V; j++) {
+                // it points to nothing
+                add_adjacency(&(to_return->list[student_index]), &(to_return->matrix[student_index]), j); // bypass the remove_adjacency's requirement of having previous connection
+                remove_adjacency(&(to_return->list[student_index]), &(to_return->matrix[student_index]), j);
+                to_return->matrix[student_index][j] = NO_CONNECTION; // because remove function makes capacity 0 not NO_CONNECTION
+
+                // nothing points to it
+                add_adjacency(&(to_return->list[j]), &(to_return->matrix[j]), student_index); // bypass the remove_adjacency's requirement of having previous connection
+                remove_adjacency(&(to_return->list[j]), &(to_return->matrix[j]), student_index);
+                to_return->matrix[j][student_index] = NO_CONNECTION; // because remove function makes capacity 0 not NO_CONNECTION
+            }
         }
     }
 
@@ -221,6 +244,7 @@ void remove_adjacency(ListNode **adjacent_list, int **adjacent_matrix, int was_a
     // adjacency list first
     ListNode *curr = *adjacent_list;
     ListNode *prev;
+
     if (curr->vertex == was_adjacent_to) { // first item
         *adjacent_list = curr->next;
         free(curr);
@@ -281,105 +305,215 @@ int **copy_graph_matrix(int **original_matrix, int size) {
     return to_return;
 }
 
-int *UCS(int **capacity_matrix, Graph *graph, int start, int goal) { // UCS == BFS when cost is the same. Capacity is 1 for every edge so implementing BFS first
+Graph *copy_graph(Graph *original_graph) {
+    Graph *to_return = malloc(sizeof(Graph));
+    int i, j;
+
+    // copy ints
+    to_return->V = original_graph->V;
+    to_return->E = original_graph->E;
+    to_return->student_offset = original_graph->student_offset;
+    to_return->project_offset = original_graph->project_offset;
+    to_return->mentor_offset = original_graph->mentor_offset;
+    to_return->sink_offset = original_graph->sink_offset;
+
+    // copy matrix
+    to_return->matrix = copy_graph_matrix(original_graph->matrix, original_graph->V);
+
+    // copy list
+    to_return->list = malloc(to_return->V * sizeof(ListNode)); // malloc list array
+
+    ListNode *curr;
+    ListNode *temp;
+    ListNode *prev;
+
+    for (i = 0; i < to_return->V; i++) {
+        curr = original_graph->list[i];
+
+        if (curr == NULL) {
+            to_return->list[i] = NULL;
+        } else {
+            to_return->list[i] = malloc(sizeof(ListNode));
+            temp = to_return->list[i];
+            while (curr != NULL) {
+                temp->vertex = curr->vertex;
+                temp->next = malloc(sizeof(ListNode));
+                prev = temp;
+                temp = temp->next;
+                curr = curr->next;
+            }
+            prev->next = NULL;
+        }
+    }
+
+    // return
+
+    return to_return;
+}
+
+int *UCS(int **capacity_matrix, Graph *graph, int start, int goal, int minimum, int maximum) {
     int *visited_array = malloc(graph->V * sizeof(int));
     int i;
     int index;
+
+    // create visited array to keep track of visited vertices. 0 means unvisited.
     for (i = 0; i < graph->V; i++) {
         visited_array[i] = 0;
     }
 
-    Queue *queueueue = malloc(sizeof(Queue));
-    queueueue->head = NULL;
-    queueueue->tail = NULL;
-    queueueue->size = 0;
+    // create queue for searching algorithm
+    Queue *queueueueue = malloc(sizeof(Queue));
+    queueueueue->head = NULL;
+    queueueueue->tail = NULL;
+    queueueueue->size = 0;
 
-    enqueue(queueueue, start);
-    visited_array[start] = start; // start parent's is itself
+    // start algorithm
+    // enqueue start
+    enqueue(queueueueue, start);
+    visited_array[start] = start; // start's parent is itself
 
-    while (!is_empty_queue(*queueueue)) {
-        index = get_front(*queueueue);
-        dequeue(queueueue);
+    while (!is_empty_queue(*queueueueue)) {
+        index = get_front(*queueueueue);
+        dequeue(queueueueue);
+
         if (index == goal) {
             break;
         }
-        
+
         for (i = 0; i < graph->V; i++) {
-            if (capacity_matrix[index][i] == 1 && visited_array[i] == 0) { // there is capacity along the edge from index to i. change == 1 for to something else for true UCS
-                enqueue(queueueue, i);
-                visited_array[i] = index; // set i's parent as index. aka i was visited because of index
+            if (i <= minimum && i != 1 && i != 2) { // 1 and 2 are sources. if minimum is set, means UCS shouldnt go into those vertices, usually project vertices. only allowed to go to source, sink, students, mentors
+                continue;
+            } else if (i >= maximum && i != (1 + graph->sink_offset) && i != (2 + graph->sink_offset)) { // if maximum is set, UCS shouldnt go into those vertices, only allowed to source, sink, projects, students
+                continue;
+            } else {
+                if (capacity_matrix[index][i] == 1 && visited_array[i] == 0) { // index is adjacent to i, and i wasnt visited previously
+                    enqueue(queueueueue, i);
+                    visited_array[i] = index; // i was visited from index. set i's parent as index
+                }
             }
         }
     }
 
-    // remove_all_items_from_queue(queueueue);
-
     return visited_array;
 }
 
-int **edmonds_karp(Graph *graph, int **original_matrix, int start, int goal) {
-    int to_return = 0;
-    int i, j;
-    int minimum_flow = 1; // matching so flow is 1
+int **edmonds_karp(Graph *original_graph) {
+    int  i, j;
 
-    // initialize flow;
-    int **flow_matrix = copy_graph_matrix(original_matrix, graph->V);
+    // create residual graph
+    Graph *residual_graph = copy_graph(original_graph);
 
-    for (i = 0; i < graph->V; i++) {
-        for (j = 0; j < graph->V; j++) {
+    // create capacity matrix of residual graph
+    int **capacity_matrix = copy_graph_matrix(residual_graph->matrix, residual_graph->V);
+
+    // create flow matrix of residual graph
+    int **flow_matrix = copy_graph_matrix(residual_graph->matrix, residual_graph->V);
+
+    for (i = 0; i < residual_graph->V; i++) {
+        for (j = 0; j < residual_graph->V; j++) {
             if (flow_matrix[i][j] != NO_CONNECTION) { // NO_CONNECTION remains as NO_CONNECTION
                 flow_matrix[i][j] = 0; // set flow to and from every existing edge to 0
             }
         }
     }
 
-    // find path
-    int path_length = 1;
-    int *visited_array;
-    Stack *path;
-    int first_vertex, second_vertex;
+    // start algorithm for source 1 to sink 1, ie match project to students
+    int source_1 = 1;
+    int sink_1 = 1 + residual_graph->sink_offset;
+    int *first_visited_array;
+    Stack *first_path;
+    int first_bipartite_length = 1;
 
-    while (path_length != -1) {
-        // find path from start to goal
-        visited_array = UCS(graph->matrix, graph, start, goal); // graph is used as residual graph. pass in graph->matrix. original_matrix is for preserving the graph matrix before matching flips the edges
-        path_length = length_calc(visited_array, start, goal);
-        if (path_length == -1) {
+    while (first_bipartite_length != -1) { // while finding path
+
+        // path finding
+        first_visited_array = UCS(residual_graph->matrix, residual_graph, source_1, sink_1, -1, 1 + residual_graph->mentor_offset); // can go from index 0 to right before first mentor
+        first_bipartite_length = length_calc(first_visited_array, 1, 1 + residual_graph->sink_offset);
+
+        if (first_bipartite_length == -1) {
             break;
         }
 
-        path = reform_path(visited_array, start, goal);
+        first_path = reform_path(first_visited_array, source_1, sink_1);
+
+        // set minimum flow
+        int minimum_flow = 1;
 
         // start for loop
-        first_vertex = peek(*path);
-        pop(path);
+        int first_vertex = peek(*first_path);
+        int second_vertex;
+        pop(first_path);
 
-        while (!is_empty_stack(*path)) {
-            second_vertex = peek(*path);
+        while (!is_empty_stack(*first_path)) {
+            second_vertex = peek(*first_path);
 
-            // add new flow
-            if (is_in_matrix(original_matrix, first_vertex, second_vertex)) { // first_vertex -> second_vertex exists in the original graph
+            // add flow
+            if (original_graph->matrix[first_vertex][second_vertex] == 1) { // first_vertex -> second_vertex was an edge in the original graph
+                flow_matrix[first_vertex][second_vertex] += minimum_flow;
+            } else {
+                original_graph->matrix[second_vertex][first_vertex] -= minimum_flow;
+            }
+
+            // update residual graph by subtracting flow
+            residual_graph->matrix[first_vertex][second_vertex] -= minimum_flow; // capacity shld flip from 1 to 0, means UCS won't go through this edge
+            residual_graph->matrix[second_vertex][first_vertex] += minimum_flow; // capacity shld flip from 0 to 1, means UCS can go through this edge
+
+            // update vertices
+            first_vertex = second_vertex;
+            pop(first_path);
+        }
+
+    }
+
+    // start algorithm for source 2 to sink 2, ie match students to mentors
+    int source_2 = 2;
+    int sink_2 = 2 + residual_graph->sink_offset;
+    int *second_visited_array;
+    Stack *second_path;
+    int second_bipartite_length = 1;
+
+    // get minimum index for UCS. UCS cannot go into projects. minimum is index of last project
+    int number_of_projects = residual_graph->student_offset - residual_graph->project_offset;
+
+    while (second_bipartite_length != -1) { // length calc returns -1 if no path
+        // path finding
+        second_visited_array = UCS(residual_graph->matrix, residual_graph, source_2, sink_2, number_of_projects + residual_graph->project_offset, NO_CONNECTION); // can go from index of second source, skip project indices, and go till sink 2
+        second_bipartite_length = length_calc(second_visited_array, source_2, sink_2);
+        
+        if (second_bipartite_length == -1) {
+            break;
+        }
+
+        second_path = reform_path(second_visited_array, source_2, sink_2);
+
+        // set minimum flow
+        int minimum_flow = 1;
+
+        // start for loop
+        int first_vertex = peek(*second_path);
+        int second_vertex;
+        pop(second_path);
+
+        while (!is_empty_stack(*second_path)) {
+            second_vertex = peek(*second_path);
+
+            // add flow
+            if (original_graph->matrix[first_vertex][second_vertex] == 1) {
                 flow_matrix[first_vertex][second_vertex] += minimum_flow;
             } else {
                 flow_matrix[second_vertex][first_vertex] -= minimum_flow;
             }
 
-            // update residual graph
-            remove_adjacency(&(graph->list[first_vertex]), &(graph->matrix[first_vertex]), second_vertex); // function modifies the matrix, changes from 1 to 0, which is the same as subtracting minimum flow
-            add_adjacency(&(graph->list[second_vertex]), &(graph->matrix[second_vertex]), first_vertex); // function modifies the matrix, changes from 0 to 1, which is the same as adding minimum flow
+            // update residual graph by subtracting flow
+            residual_graph->matrix[first_vertex][second_vertex] -= minimum_flow;
+            residual_graph->matrix[second_vertex][first_vertex] += minimum_flow;
 
             // update vertices
             first_vertex = second_vertex;
-            pop(path); // second vertex will be update at the next iteration
+            pop(second_path);
         }
-
-        // printf("after flipping\n");
-        // print_graph_list(*graph);
     }
 
-    // free
-    // remove_all_items_from_stack(path);
-    // free(visited_array);
-    
     return flow_matrix;
 }
 
@@ -388,17 +522,8 @@ int flow_calc_in(int **flow_matrix, int flow_into, int size) {
     for (int i = 0; i < size; i++) {
         if (flow_matrix[i][flow_into] == 1) {
             to_return++;
-        }
-    }
-
-    return to_return;
-}
-
-int flow_calc_out(int **flow_matrix, int flow_out, int size) {
-    int to_return = 0;
-    for (int i = 0; i < size; i++) {
-        if (flow_matrix[flow_out][i] == 1) {
-            to_return++;
+        } else if (flow_matrix[i][flow_into] == -1) {
+            to_return--;
         }
     }
 
@@ -406,32 +531,20 @@ int flow_calc_out(int **flow_matrix, int flow_out, int size) {
 }
 
 int matching(Graph *graph, int **original_matrix) {
-    int **p_to_s_matrix;
-    int **s_to_m_matrix;
-    int p_to_s, s_to_m;
+    // call edmond karp
+    int **flow_matrix = edmonds_karp(graph);
 
-    // src_1 -> project -> student -> sink_1
-    // printf("finding source 1 to project to student to sink 1\n");
-    p_to_s_matrix = edmonds_karp(graph, original_matrix, 1, graph->sink_offset + 1);
+    // count flow into sink 1
+    int sink_1 = flow_calc_in(flow_matrix, 1 + graph->sink_offset, graph->V);
 
-    // calculate flow from student into sink 1
-    p_to_s = flow_calc_in(p_to_s_matrix, graph->sink_offset + 1, graph->V);
+    // count flow into sink 2
+    int sink_2 = flow_calc_in(flow_matrix, 2 + graph->sink_offset, graph->V);
 
-    // src_2 -> student -> mentor -> sink_2
-    // printf("finding source 2 to student to mentor to sink 2\n");
-    s_to_m_matrix = edmonds_karp(graph, original_matrix, 2, graph->sink_offset + 2);
-
-    // calculate flow from source 2 to student
-    s_to_m = flow_calc_out(s_to_m_matrix, 2, graph->V);
-
-    // free
-    // free(p_to_s_matrix);
-    // free(s_to_m_matrix);
-
-    if (s_to_m <= p_to_s) {
-        return s_to_m;
+    // return minimum of the 2
+    if (sink_1 <= sink_2) {
+        return sink_1;
     } else {
-        return p_to_s;
+        return sink_2;
     }
 }
 
